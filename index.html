@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReportaParques</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', system_ui, sans-serif; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        video { width: 100%; max-height: 380px; background: #111; border-radius: 16px; object-fit: cover; }
+        .report-card { transition: all 0.2s; }
+        .report-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- NAVEGACIÓN -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-2xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-emerald-500 rounded-2xl flex items-center justify-center text-white text-2xl">🌳</div>
+                <h1 class="text-2xl font-bold text-gray-900">ReportaParques</h1>
+            </div>
+            <div class="flex gap-1 text-sm">
+                <button onclick="cambiarPantalla('home')" class="nav-btn px-4 py-2 rounded-3xl flex items-center gap-1.5 active">
+                    <i class="fas fa-home"></i> Inicio
+                </button>
+                <button onclick="cambiarPantalla('reportar')" class="nav-btn px-4 py-2 rounded-3xl flex items-center gap-1.5">
+                    <i class="fas fa-camera"></i> Reportar
+                </button>
+                <button onclick="cambiarPantalla('reportes')" class="nav-btn px-4 py-2 rounded-3xl flex items-center gap-1.5">
+                    <i class="fas fa-list"></i> Reportes
+                </button>
+                <button onclick="cambiarPantalla('mapa')" class="nav-btn px-4 py-2 rounded-3xl flex items-center gap-1.5">
+                    <i class="fas fa-map"></i> Mapa
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-2xl mx-auto px-4 pb-24">
+
+        <!-- PANTALLA HOME -->
+        <div id="home" class="screen active py-12">
+            <div class="text-center">
+                <div class="mx-auto w-28 h-28 bg-emerald-100 rounded-3xl flex items-center justify-center text-7xl mb-6">🌳</div>
+                <h2 class="text-4xl font-bold mb-3">Cuidemos nuestros parques</h2>
+                <p class="text-gray-600 text-lg max-w-sm mx-auto">Reporta mal uso, basura, vandalismo o problemas en parques públicos.</p>
+            </div>
+
+            <div class="mt-16 grid grid-cols-2 gap-4">
+                <button onclick="cambiarPantalla('reportar')" 
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-3xl py-14 flex flex-col items-center justify-center shadow-lg">
+                    <i class="fas fa-camera text-5xl mb-4"></i>
+                    <span class="text-2xl font-semibold">Reportar ahora</span>
+                </button>
+                <button onclick="cambiarPantalla('reportes')" 
+                        class="bg-white border-2 border-gray-200 hover:border-emerald-300 rounded-3xl py-14 flex flex-col items-center justify-center shadow-lg">
+                    <i class="fas fa-list text-5xl mb-4 text-emerald-600"></i>
+                    <span class="text-2xl font-semibold text-gray-800">Ver reportes</span>
+                </button>
+            </div>
+
+            <button onclick="cambiarPantalla('mapa')" 
+                    class="mt-8 w-full bg-white border border-gray-200 hover:border-emerald-400 rounded-3xl py-8 flex items-center justify-between px-8">
+                <div class="text-left">
+                    <div class="font-semibold text-xl">Abrir Google Maps</div>
+                    <div class="text-gray-500">Buscar parques cercanos</div>
+                </div>
+                <i class="fas fa-map-marked-alt text-4xl text-emerald-500"></i>
+            </button>
+        </div>
+
+        <!-- PANTALLA REPORTAR -->
+        <div id="reportar" class="screen py-8">
+            <h2 class="text-3xl font-bold mb-6">Nuevo Reporte</h2>
+
+            <!-- Cámara -->
+            <div class="mb-8">
+                <div class="flex justify-between mb-3">
+                    <span class="font-medium text-lg">Tomar foto</span>
+                    <button id="btnCamara" onclick="toggleCamera()" 
+                            class="bg-emerald-600 text-white px-6 py-2 rounded-2xl flex items-center gap-2">
+                        <i class="fas fa-video"></i> Encender cámara
+                    </button>
+                </div>
+                <video id="video" autoplay playsinline class="hidden rounded-3xl shadow-inner"></video>
+                
+                <div id="previewArea" class="hidden">
+                    <img id="photoPreview" class="w-full rounded-3xl shadow-inner border-4 border-white">
+                    <div class="flex gap-3 mt-4">
+                        <button onclick="retomarFoto()" 
+                                class="flex-1 bg-gray-200 hover:bg-gray-300 py-4 rounded-2xl font-medium">Retomar</button>
+                        <button onclick="guardarFoto()" 
+                                class="flex-1 bg-emerald-600 text-white py-4 rounded-2xl font-medium">Guardar foto</button>
+                    </div>
+                </div>
+            </div>
+
+            <form id="formReporte" onsubmit="enviarReporte(event)">
+                <div class="space-y-6">
+                    <div>
+                        <label class="block font-medium mb-2">Ubicación actual</label>
+                        <button type="button" onclick="obtenerUbicacion()" 
+                                class="w-full text-left border border-dashed border-gray-300 hover:border-emerald-400 rounded-3xl px-6 py-5 flex items-center gap-3">
+                            <i class="fas fa-location-dot text-emerald-600 text-2xl"></i>
+                            <span id="ubicacionDisplay" class="flex-1 text-gray-600">Obtener mi ubicación</span>
+                        </button>
+                    </div>
+
+                    <div>
+                        <label class="block font-medium mb-2">Nombre del parque</label>
+                        <input id="parqueNombre" type="text" placeholder="Ej: Parque México" 
+                               class="w-full px-6 py-4 rounded-3xl border border-gray-200 focus:border-emerald-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block font-medium mb-2">Descripción del problema</label>
+                        <textarea id="descripcion" rows="4" placeholder="Hay basura acumulada, juegos rotos..." 
+                                  class="w-full px-6 py-4 rounded-3xl border border-gray-200 focus:border-emerald-500 focus:outline-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block font-medium mb-2">Importancia</label>
+                        <select id="importancia" class="w-full px-6 py-4 rounded-3xl border border-gray-200 focus:border-emerald-500 focus:outline-none">
+                            <option value="alta">🔴 Alta importancia</option>
+                            <option value="media" selected>🟡 Media importancia</option>
+                            <option value="baja">🟢 Baja importancia</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" 
+                            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-6 rounded-3xl text-xl font-semibold mt-4">
+                        Enviar Reporte
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- PANTALLA REPORTES -->
+        <div id="reportes" class="screen py-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold">Reportes en tiempo real</h2>
+                <button onclick="agregarReporteDemo()" 
+                        class="text-sm bg-emerald-100 hover:bg-emerald-200 px-4 py-2 rounded-2xl flex items-center gap-2">
+                    <i class="fas fa-plus"></i> Simular reporte
+                </button>
+            </div>
+            
+            <div id="listaReportes" class="space-y-6">
+                <!-- Los reportes se generan con JavaScript -->
+            </div>
+        </div>
+
+        <!-- PANTALLA MAPA -->
+        <div id="mapa" class="screen">
+            <div class="relative h-screen">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3762.0!2d-99.1332!3d19.4326!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85ce0035f3a5b5b5%3A0x4c0b0b0b0b0b0b0b!2sParque+M%C3%A9xico!5e0!3m2!1ses!2smx!4v1710000000000" 
+                        width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                
+                <button onclick="cambiarPantalla('home')" 
+                        class="absolute bottom-8 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-10 py-4 rounded-3xl text-lg font-semibold shadow-2xl flex items-center gap-3 hover:bg-emerald-700">
+                    <i class="fas fa-arrow-left"></i>
+                    Regresar a la App
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para ver foto grande -->
+    <div id="modalFoto" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4">
+        <div class="max-w-lg w-full">
+            <img id="imgGrande" class="w-full rounded-3xl" alt="Foto del reporte">
+            <button onclick="cerrarModal()" 
+                    class="mt-6 mx-auto block bg-white px-8 py-3 rounded-2xl text-lg font-medium">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-emerald-700 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3">
+        <i class="fas fa-check-circle text-2xl"></i>
+        <span id="toastMensaje" class="font-medium"></span>
+    </div>
+
+    <script>
+        // ==================== ESTRUCTURA NoSQL (JSON) ====================
+        // Esta es la estructura real que se guarda en cada reporte
+        function crearReporteObjeto(id, parque, descripcion, foto, importancia, lat, lng) {
+            return {
+                id: id,
+                usuario_id: "usuario_" + Math.floor(Math.random() * 10000),
+                fecha: new Date().toISOString(),
+                ubicacion: {
+                    latitud: lat || 19.4326,
+                    longitud: lng || -99.1332,
+                    parque_nombre: parque
+                },
+                descripcion: descripcion,
+                foto_url: foto,           // aquí se guarda la foto en base64
+                importancia: importancia,
+                estatus: "pendiente",
+                created_at: new Date().toISOString()
+            };
+        }
+
+        let reportes = JSON.parse(localStorage.getItem('reportesParques')) || [];
+        let streamActual = null;
+        let fotoCapturada = null;
+        let latActual = null;
+        let lngActual = null;
+
+        // Cambiar entre pantallas
+        function cambiarPantalla(pantalla) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(pantalla).classList.add('active');
+            
+            if (pantalla === 'reportes') {
+                mostrarReportes();
+            }
+        }
+
+        // ==================== CÁMARA REAL ====================
+        function toggleCamera() {
+            const video = document.getElementById('video');
+            const btn = document.getElementById('btnCamara');
+            const preview = document.getElementById('previewArea');
+
+            if (streamActual) {
+                streamActual.getTracks().forEach(track => track.stop());
+                streamActual = null;
+                video.classList.add('hidden');
+                preview.classList.add('hidden');
+                btn.innerHTML = `<i class="fas fa-video"></i> Encender cámara`;
+                return;
+            }
+
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                .then(stream => {
+                    streamActual = stream;
+                    video.srcObject = stream;
+                    video.classList.remove('hidden');
+                    btn.innerHTML = `<i class="fas fa-stop"></i> Apagar cámara`;
+                    
+                    // Tomar foto automáticamente después de 1 segundo (más cómodo)
+                    setTimeout(() => {
+                        if (streamActual) tomarFoto();
+                    }, 1500);
+                })
+                .catch(() => alert("No se pudo acceder a la cámara. Asegúrate de permitir el acceso."));
+        }
+
+        function tomarFoto() {
+            const video = document.getElementById('video');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+
+            fotoCapturada = canvas.toDataURL('image/jpeg', 0.85);
+
+            document.getElementById('photoPreview').src = fotoCapturada;
+            document.getElementById('video').classList.add('hidden');
+            document.getElementById('previewArea').classList.remove('hidden');
+        }
+
+        function retomarFoto() {
+            document.getElementById('previewArea').classList.add('hidden');
+            document.getElementById('video').classList.remove('hidden');
+            fotoCapturada = null;
+        }
+
+        function guardarFoto() {
+            if (!fotoCapturada) return;
+            document.getElementById('previewArea').classList.add('hidden');
+            mostrarToast("Foto guardada correctamente");
+        }
+
+        // ==================== UBICACIÓN REAL ====================
+        function obtenerUbicacion() {
+            if (!navigator.geolocation) {
+                alert("Tu navegador no soporta geolocalización");
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(pos => {
+                latActual = pos.coords.latitude;
+                lngActual = pos.coords.longitude;
+                document.getElementById('ubicacionDisplay').innerHTML = 
+                    `📍 ${latActual.toFixed(5)}, ${lngActual.toFixed(5)}`;
+                mostrarToast("Ubicación obtenida");
+            }, () => {
+                alert("No se pudo obtener la ubicación. Verifica los permisos.");
+            });
+        }
+
+        // ==================== ENVIAR REPORTE ====================
+        function enviarReporte(e) {
+            e.preventDefault();
+
+            const parque = document.getElementById('parqueNombre').value.trim() || "Parque sin nombre";
+            const descripcion = document.getElementById('descripcion').value.trim();
+            const importancia = document.getElementById('importancia').value;
+
+            if (!descripcion || !fotoCapturada) {
+                alert("Debes escribir una descripción y tomar una foto.");
+                return;
+            }
+
+            const nuevoReporte = crearReporteObjeto(
+                "rep_" + Date.now(),
+                parque,
+                descripcion,
+                fotoCapturada,
+                importancia,
+                latActual,
+                lngActual
+            );
+
+            reportes.unshift(nuevoReporte);
+            localStorage.setItem('reportesParques', JSON.stringify(reportes));
+
+            // Limpiar todo
+            document.getElementById('formReporte').reset();
+            fotoCapturada = null;
+            latActual = null;
+            lngActual = null;
+
+            mostrarToast("¡Reporte enviado correctamente! 🌳");
+            
+            // Ir a la lista de reportes
+            setTimeout(() => {
+                cambiarPantalla('reportes');
+            }, 800);
+        }
+
+        // ==================== MOSTRAR REPORTES ====================
+        function mostrarReportes() {
+            const container = document.getElementById('listaReportes');
+            container.innerHTML = '';
+
+            if (reportes.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-gray-400">Aún no hay reportes. ¡Sé el primero en reportar!</div>`;
+                return;
+            }
+
+            reportes.forEach(rep => {
+                const color = rep.importancia === 'alta' ? 'bg-red-500' : 
+                             rep.importancia === 'media' ? 'bg-amber-500' : 'bg-emerald-500';
+
+                const card = document.createElement('div');
+                card.className = 'report-card bg-white rounded-3xl p-5 shadow cursor-pointer';
+                card.innerHTML = `
+                    <div class="flex gap-4">
+                        <img src="${rep.foto_url}" onclick="verFoto('${rep.foto_url}'); event.stopImmediatePropagation()" 
+                             class="w-28 h-28 object-cover rounded-2xl flex-shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start">
+                                <span class="px-3 py-1 text-xs font-bold text-white rounded-2xl ${color}">
+                                    ${rep.importancia.toUpperCase()}
+                                </span>
+                                <span class="text-xs text-gray-400">${new Date(rep.fecha).toLocaleDateString('es-ES')}</span>
+                            </div>
+                            <p class="font-semibold mt-2 text-lg leading-tight">${rep.ubicacion.parque_nombre}</p>
+                            <p class="text-gray-600 text-sm line-clamp-3 mt-1">${rep.descripcion}</p>
+                            <div class="mt-3 text-xs text-emerald-600 flex items-center gap-1">
+                                <i class="fas fa-map-marker-alt"></i>
+                                ${rep.ubicacion.latitud ? rep.ubicacion.latitud.toFixed(4) : '19.43'}, 
+                                ${rep.ubicacion.longitud ? rep.ubicacion.longitud.toFixed(4) : '-99.13'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                card.onclick = () => verFoto(rep.foto_url);
+                container.appendChild(card);
+            });
+        }
+
+        function verFoto(url) {
+            document.getElementById('imgGrande').src = url;
+            document.getElementById('modalFoto').classList.remove('hidden');
+            document.getElementById('modalFoto').classList.add('flex');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalFoto').classList.add('hidden');
+            document.getElementById('modalFoto').classList.remove('flex');
+        }
+
+        // ==================== REPORTE DEMO (para probar tiempo real) ====================
+        function agregarReporteDemo() {
+            const demo = crearReporteObjeto(
+                "rep_demo_" + Date.now(),
+                "Parque Hundido",
+                "Juegos infantiles rotos y mucha basura acumulada cerca de los bancos.",
+                "https://picsum.photos/id/" + (200 + Math.floor(Math.random()*100)) + "/600/400",
+                "alta",
+                19.42,
+                -99.15
+            );
+
+            reportes.unshift(demo);
+            localStorage.setItem('reportesParques', JSON.stringify(reportes));
+            mostrarReportes();
+            mostrarToast("Nuevo reporte recibido en tiempo real");
+        }
+
+        function mostrarToast(mensaje) {
+            const toas
